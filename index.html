@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List with Drag and Drop</title>
+
+    <script src="https://rawgit.com/RubaXa/Sortable/master/Sortable.js"></script>
+
+    <style>
+        #sdrawkcab {
+            display: flex;
+            justify-content: center;
+        }
+
+        .text2 {
+            border-radius: 12px;
+            border: 1px solid black;
+            height: 150px;
+            width: 650px;
+        }
+
+        #title {
+            margin-bottom: 0px;
+            margin-left: 18px;
+            margin-top: 12px;
+            height: 25px;
+            width: 180px;
+        }
+
+        input,
+        button {
+            border-radius: 10px;
+        }
+
+        #des {
+            margin-left: 10px;
+            margin-top: 10px;
+            width: 350px;
+            height: 25px;
+        }
+
+        #myDate {
+            margin-left: 260px;
+            margin-top: 10px;
+        }
+
+        #btn1 {
+            height: 30px;
+            margin-left: 80px;
+            width: 85px;
+        }
+
+        .text9 {
+            box-sizing: border-box;
+            height: 20px;
+            justify-content: center;
+            margin-top: 15px;
+            width: 700px;
+        }
+
+        .snb {
+            background-color: #fff;
+            cursor: grab;
+            height: 80px;
+            width: 80px;
+        }
+
+        .snb2 {
+            box-sizing: border-box;
+            margin-top: 90px;
+            width: 650px;
+        }
+
+        .txt1 {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .m-item {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: grab;
+            margin-bottom: 10px;
+            padding: 10px;
+        }
+
+        textarea {
+            height: 50px;
+            width: 605px;
+        }
+
+        .text3 {
+            background-color: rgba(0, 0, 0, 0.4);
+            display: none;
+            height: 100%;
+            left: 0;
+            overflow: auto;
+            padding-top: 60px;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1;
+        }
+
+        .model0 {
+            border: 1px solid #888;
+            margin: 5% auto;
+            padding: 25px;
+            width: 60%;
+            background-color: #fefefe;
+        }
+
+        .model2 {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .model2:hover,
+        .model2:focus {
+            color: black;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .modal1 {
+            border: 2px dashed #000;
+        }
+
+        
+    </style>
+</head>
+
+<body>
+    <section>
+        <div class="text2">
+            <input type="text" placeholder="Title" id="title">
+            <input type="date" id="myDate" max="2222-05-26">
+            <input type="text" placeholder="Description" id="des">
+            <button id="btn1" onclick="handlesaveanddelete()">SAVE</button>
+        </div>
+
+        <div class="text9">
+            <div id="days">
+                <button class="w" onclick="handleDaySelection(0)">Sun</button>
+                <button class="w" onclick="handleDaySelection(1)">Mon</button>
+                <button class="w" onclick="handleDaySelection(2)">Tue</button>
+                <button class="w" onclick="handleDaySelection(3)">Wed</button>
+                <button class="w" onclick="handleDaySelection(4)">Thu</button>
+                <button class="w" onclick="handleDaySelection(5)">Fri</button>
+                <button class="w" onclick="handleDaySelection(6)">Sat</button>
+            </div>
+        </div>
+
+        <div class="snb2" id="droppable-area">
+
+        </div>
+    </section>
+    <div id="myModal" class="text3">
+        <div class="model0">
+            <span class="model2" onclick="handleCloseModal()">&times;</span>
+            <label for="editTitle">Title:</label>
+            <input type="text" id="editTitle">
+            <label for="editDate">Date:</label>
+            <input type="date" id="editDate" max="2222-05-26"><br>
+            <label for="editDes">Description:</label>
+            <textarea id="editDes"></textarea>
+
+            <button onclick="handleEditSave()">Save</button>
+        </div>
+    </div>
+
+    <script>
+        const titleInput = document.getElementById("title");
+        const descriptionInput = document.getElementById("des");
+        const dateInput = document.getElementById("myDate");
+        const droppableArea = document.getElementById("droppable-area");
+        const dayButtons = document.querySelectorAll('.snb');
+        const Buttons = document.querySelectorAll('.w');
+
+        const sortable = new Sortable(droppableArea, {
+            animation: 150,
+            ghostClass: 'modal1',
+        });
+
+        function handleDaySelection(dayIndex) {
+            const seleDate = new Date(dateInput.value);
+            const seleDay = seleDate.getDay();
+
+            dayButtons.forEach(button => button.classList.remove('selected-day'));
+            dayButtons[dayIndex].classList.add('selected-day');
+
+            Buttons.forEach(button => button.style.backgroundColor = '');
+            Buttons[seleDay].style.backgroundColor = 'lightblue'; // Or desired color
+        }
+
+        function handlesaveanddelete() {
+            const title = titleInput.value;
+            const description = descriptionInput.value;
+            const date = dateInput.value;
+
+            const today = new Date();
+            const enteredDate = new Date(date);
+            const isToday = enteredDate.getDate() === today.getDate() &&
+                enteredDate.getMonth() === today.getMonth() &&
+                enteredDate.getFullYear() === today.getFullYear();
+
+            if (isToday) {
+                droppableArea.innerHTML = '';
+            }
+
+            if (!title || !date) {
+                alert("Please enter Title, Description, and Date before saving.");
+                return;
+            }
+
+            const content = `
+                <div class="m-item">
+                    <b>Title:</b> ${title}<br>
+                    <b>Description:</b> ${description}<br>
+                    <b>Date:</b> ${date}
+                    <button class="delete-button" onclick="handleDelete(this)">Delete</button>
+                    <button class="edit-button" onclick="handleEdit(this)">Edit</button>
+                </div>
+            `;
+
+            droppableArea.insertAdjacentHTML('beforeend', content);
+
+            titleInput.value = "";
+            descriptionInput.value = "";
+            dateInput.value = "";
+        }
+
+        function handleDelete(button) {
+            button.parentNode.remove();
+        }
+
+        let selectedEditItem;
+
+        function handleEdit(button) {
+            const selectedItem = button.parentNode;
+            const title = selectedItem.querySelector("b:nth-of-type(1)").innerText;
+            const description = selectedItem.querySelector("b:nth-of-type(2)").innerText;
+            const date = selectedItem.querySelector("b:nth-of-type(3)").innerText;
+
+            document.getElementById("editTitle").value = title.replace("Title:", "").trim();
+            document.getElementById("editDes").value = description.replace("Description:", "").trim();
+            document.getElementById("editDate").value = date.replace("Date:", "").trim();
+
+            selectedEditItem = selectedItem;
+            openModal();
+        }
+
+        function handleEditSave() {
+            const editedTitle = document.getElementById("editTitle").value;
+            const editedDescription = document.getElementById("editDes").value;
+            const editedDate = document.getElementById("editDate").value;
+
+            selectedEditItem.remove();
+
+            const updatedContent = `
+                <div class="m-item">
+                    <b>Title:</b> ${editedTitle}<br>
+                    <b>Description:</b> ${editedDescription}<br>
+                    <b>Date:</b> ${editedDate}
+                    <button class="delete-button" onclick="handleDelete(this)">Delete</button>
+                    <button class="edit-button" onclick="handleEdit(this)">Edit</button>
+                </div>
+            `;
+
+            droppableArea.insertAdjacentHTML('beforeend', updatedContent);
+
+            titleInput.value = editedTitle;
+            descriptionInput.value = editedDescription;
+            dateInput.value = editedDate;
+
+            handleCloseModal();
+
+            titleInput.value = "";
+            descriptionInput.value = "";
+            dateInput.value = "";
+        }
+
+        function openModal() {
+            document.getElementById("myModal").style.display = "block";
+        }
+
+        function handleCloseModal() {
+            document.getElementById("myModal").style.display = "none";
+        }
+
+        window.onclick = function (event) {
+            const modal = document.getElementById("myModal");
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        };
+
+        // Event listener for date change
+        dateInput.addEventListener('change', () => {
+            const seleDate = new Date(dateInput.value);
+            const seleDay = seleDate.getDay();
+
+            Buttons.forEach(button => button.style.backgroundColor = '');
+            Buttons[seleDay].style.backgroundColor = 'gray'; // Or desired color
+        });
+    </script>
+</body>
+
+</html>
